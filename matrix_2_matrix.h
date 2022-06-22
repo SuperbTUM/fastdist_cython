@@ -36,6 +36,7 @@ public:
 void get_matrix_to_matrix_dist(double *a, double *b, double *res, long a_rows, long b_rows, long vec_dim){
     const MatrixView<double, false> a_view(a, a_rows, vec_dim);
     const MatrixView<double, false> b_view(b, b_rows, vec_dim);
+    int idx = 0;
     #pragma omp taskloop for maxcpus(4)
     #pragma omp taskloop for schedtype(static)
     #pragma omp parallel for num_threads(4)
@@ -47,7 +48,7 @@ void get_matrix_to_matrix_dist(double *a, double *b, double *res, long a_rows, l
                 double diff = a_view(i, k) - b_view(j, k);
                 cur_sum += diff * diff;
             }
-            res[b_rows * i + j] = sqrt(cur_sum);
+            *(res + idx++) = sqrt(cur_sum);
         }
     }
 }

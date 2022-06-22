@@ -1,7 +1,7 @@
 import pairwise_distance_euclidean
 import numpy as np
 import time
-from scipy.spatial.distance import cdist, pdist
+from scipy.spatial.distance import cdist, pdist, squareform
 from fastdist import fastdist
 
 
@@ -34,7 +34,7 @@ if __name__ == "__main__":
     print("Cython running time is {:.4f} seconds.".format((end-start) / 10))
     start = time.time()
     for _ in range(10):
-        pairwise_scipy = pdist(matrix_square)
+        pairwise_scipy = squareform(pdist(matrix_square))
     end = time.time()
     print("Scipy running time is {:.4f} seconds.".format((end-start) / 10))
     start = time.time()

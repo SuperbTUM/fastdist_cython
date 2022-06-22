@@ -4,6 +4,12 @@ This repository is intended for Cython+OpenMP practice of matrix-level pairwise 
 
 
 
+## Environment
+
+Windows
+
+
+
 ## Quick Start
 
 First, navigate to the folder of `fastdist_cython` and compile the source code with 
@@ -24,16 +30,16 @@ python test.py
 
 * Inputs for matrix to matrix distance calculation: matrix_a: (200, 1024) & matrix_b: (1500, 1024)
 
-  | [Fastdist](https://github.com/talboger/fastdist) (Numba) | Scipy (cdist) | Ours (Cython) |
-  | -------------------------------------------------------- | ------------- | ------------- |
-  | 0.5778 sec                                               | 0.4207 sec    | 0.4273 sec    |
+  | [Fastdist](https://github.com/talboger/fastdist) (Numba) | Scipy (cdist)                       | Ours (Cython)      |
+  |-------------------------------------------------------|-------------------------------------| ------------------------------------- |
+  | 0.4691 sec                                                  | 0.3250 sec                          | 0.3225 sec    |
 
   
 
 * Input for pairwise distance calculation: matrix: (512, 1024)
 
-  | [Fastdist](https://github.com/talboger/fastdist) (Numba) | Scipy (cdist) | Ours (Cython) |
+  | [Fastdist](https://github.com/talboger/fastdist) (Numba) | Scipy (pdist) | Ours (Cython) |
   | -------------------------------------------------------- | ------------- | ------------- |
-  | 0.4027 sec                                               | 0.1626 sec    | 0.1550 sec    |
+  | 0.3154 sec                                               | 0.1266 sec    | 0.1236 sec    |
 
   
