@@ -2,6 +2,8 @@
 #include <cmath>
 #include <iostream>
 #include <omp.h>
+#include <thread>
+#include <vector>
 
 
 template<typename T, bool col_major=false>
@@ -37,7 +39,7 @@ void get_matrix_to_matrix_dist(double *a, double *b, double *res, long a_rows, l
     const MatrixView<double, false> b_view(b, b_rows, vec_dim);
     int idx = 0;
     double diff = 0.0;
-    #pragma omp parallel for num_threads(4)
+    // #pragma omp parallel for num_threads(4) // data race, use critical(atomic op)
     for(auto i = 0; i < a_rows; i++){
         for(auto j = 0; j < b_rows; j++){
             double cur_sum = 0.0;
@@ -51,11 +53,39 @@ void get_matrix_to_matrix_dist(double *a, double *b, double *res, long a_rows, l
     }
 }
 
+void get_matrix_to_matrix_dist_multi_threading(double *a, double *b, double *res, long a_rows, long b_rows, long vec_dim){
+    int threads = omp_get_num_threads();
+    vector<thread> thread_pool;
+    long start_ptr, size, local_rows;
+    start_ptr = 0l;
+    for(int i=0; i<threads; i++){
+        if(a_rows * vec_dim - start_ptr < a_rows * vec_dim / threads){
+            size = a_rows * vec_dim - start_ptr;
+            local_rows = a_rows % threads;
+        }else{
+            size = a_rows * vec_dim / threads;
+            local_rows = a_rows / threads;
+        }
+        int start_idx_row = static_cast<int> (start_ptr / vec_dim);
+        thread_pool.push_back(get_matrix_to_matrix_dist, &a[start_idx_row][0],
+                                                         &b[0][0],
+                                                         &res[start_idx_row][0],
+                                                         local_rows,
+                                                         b_rows,
+                                                         vec_dim);
+        start_ptr += size;
+    }
+    for(int i=0; i<threads, i++){
+        thread_pool[i].join();
+    }
+    // compile with -pthread
+}
+
 void get_pairwise_dist(double *a, long a_rows, long vec_dim, double *res){
     const MatrixView<double, false> a_view(a, a_rows, vec_dim);
     auto i = 0;
     double diff = 0.0;
-    #pragma omp parallel for num_threads(4)
+    // #pragma omp parallel for num_threads(4) // data race, use critical(atomic op)
     for(; i < a_rows; i++){
         for(auto j = 0; j < i; j++){
             double cur_sum = 0.0;
