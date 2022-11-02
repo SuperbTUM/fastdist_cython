@@ -7,6 +7,7 @@ np.import_array()
 
 cdef extern from "matrix_2_matrix.h":
     void get_matrix_to_matrix_dist(double*, double*, double*, const long, const long, const long)
+    void get_matrix_to_matrix_dist_multi_threading(double*, double*, double*, const long, const long, const long)
     void get_pairwise_dist(double*, const long, const long, double*)
 
 @cython.boundscheck(False)
@@ -19,7 +20,7 @@ def euclidean_matrix_2_matrix(np.ndarray[double, ndim=2, mode="c"] ca, np.ndarra
     cdef np.ndarray[double, ndim=2, mode="c"] res = np.ascontiguousarray(
         np.zeros(shape=(ca.shape[0], cb.shape[0]), dtype=np.float64))
     # res = np.random.randn(a.shape[0], b.shape[0])
-    get_matrix_to_matrix_dist(&ca[0,0], &cb[0,0], &res[0,0], ca.shape[0], cb.shape[0], ca.shape[1])
+    get_matrix_to_matrix_dist_multi_threading(&ca[0,0], &cb[0,0], &res[0,0], ca.shape[0], cb.shape[0], ca.shape[1])
     return res
 
 @cython.boundscheck(False)

@@ -3,8 +3,7 @@
 #include <iostream>
 #include <omp.h>
 #include <thread>
-#include <vector>
-
+using namespace std;
 
 template<typename T, bool col_major=false>
 class MatrixView{
@@ -55,10 +54,10 @@ void get_matrix_to_matrix_dist(double *a, double *b, double *res, long a_rows, l
 
 void get_matrix_to_matrix_dist_multi_threading(double *a, double *b, double *res, long a_rows, long b_rows, long vec_dim){
     int threads = omp_get_num_threads();
-    vector<thread> thread_pool;
+    thread* thread_pool = new thread[threads];
     long start_ptr, size, local_rows;
     start_ptr = 0l;
-    for(int i=0; i<threads; i++){
+    for(int i = 0; i<threads; i++){
         if(a_rows * vec_dim - start_ptr < a_rows * vec_dim / threads){
             size = a_rows * vec_dim - start_ptr;
             local_rows = a_rows % threads;
@@ -67,16 +66,16 @@ void get_matrix_to_matrix_dist_multi_threading(double *a, double *b, double *res
             local_rows = a_rows / threads;
         }
         int start_idx_row = static_cast<int> (start_ptr / vec_dim);
-        thread_pool.push_back(get_matrix_to_matrix_dist, &a[start_idx_row][0],
-                                                         &b[0][0],
-                                                         &res[start_idx_row][0],
+        thread_pool[i] = thread(get_matrix_to_matrix_dist, &a[start_idx_row * vec_dim],
+                                                         &b[0],
+                                                         &res[start_idx_row * vec_dim],
                                                          local_rows,
                                                          b_rows,
                                                          vec_dim);
         start_ptr += size;
     }
-    for(int i=0; i<threads, i++){
-        thread_pool[i].join();
+    for(int j=0; j<threads; j++){
+        thread_pool[j].join();
     }
     // compile with -pthread
 }
