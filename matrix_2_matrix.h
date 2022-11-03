@@ -42,10 +42,10 @@ void get_matrix_to_matrix_dist(double *a, double *b, double *res, long a_rows, l
     for(auto i = 0; i < a_rows; i++){
         for(auto j = 0; j < b_rows; j++){
             double cur_sum = 0.0;
-            #pragma omp parallel for reduction(+:cur_sum) private(diff)
+            #pragma omp parallel for num_threads(4) reduction(+:cur_sum) private(diff)
             for(auto k = 0; k < vec_dim; k++){
                 diff = a_view(i, k) - b_view(j, k);
-                cur_sum += diff * diff;
+                cur_sum = cur_sum + diff * diff;
             }
             *(res + idx++) = sqrt(cur_sum);
         }
@@ -53,28 +53,27 @@ void get_matrix_to_matrix_dist(double *a, double *b, double *res, long a_rows, l
 }
 
 void get_matrix_to_matrix_dist_multi_threading(double *a, double *b, double *res, long a_rows, long b_rows, long vec_dim){
-    int threads = omp_get_num_threads();
-    thread* thread_pool = new thread[threads];
+    const int threads = omp_get_max_threads()-1;
+    thread* thread_pool = new thread[threads+1];
     long start_ptr, size, local_rows;
     start_ptr = 0l;
-    for(int i = 0; i<threads; i++){
+    for(int i = 0; i<=threads; i++){
+        int start_idx_row = static_cast<int> (start_ptr / vec_dim);
         if(a_rows * vec_dim - start_ptr < a_rows * vec_dim / threads){
-            size = a_rows * vec_dim - start_ptr;
-            local_rows = a_rows % threads;
+            local_rows = a_rows - start_idx_row;
         }else{
-            size = a_rows * vec_dim / threads;
             local_rows = a_rows / threads;
         }
-        int start_idx_row = static_cast<int> (start_ptr / vec_dim);
+        size = local_rows * vec_dim;
         thread_pool[i] = thread(get_matrix_to_matrix_dist, &a[start_idx_row * vec_dim],
                                                          &b[0],
-                                                         &res[start_idx_row * vec_dim],
+                                                         &res[start_idx_row * b_rows],
                                                          local_rows,
                                                          b_rows,
                                                          vec_dim);
         start_ptr += size;
     }
-    for(int j=0; j<threads; j++){
+    for(int j=0; j<=threads; j++){
         thread_pool[j].join();
     }
     // compile with -pthread
@@ -88,10 +87,10 @@ void get_pairwise_dist(double *a, long a_rows, long vec_dim, double *res){
     for(; i < a_rows; i++){
         for(auto j = 0; j < i; j++){
             double cur_sum = 0.0;
-            #pragma omp parallel for reduction(+:cur_sum) private(diff)
+            #pragma omp parallel for num_threads(4) reduction(+:cur_sum) private(diff)
             for(auto k = 0; k < vec_dim; k++){
                 diff = (a_view(i, k) - a_view(j, k));
-                cur_sum += diff * diff;
+                cur_sum = cur_sum + diff * diff;
             }
             res[a_rows * i + j] = sqrt(cur_sum);
             res[a_rows * j + i] = sqrt(cur_sum);
