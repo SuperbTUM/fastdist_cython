@@ -5,6 +5,8 @@
 #include <thread>
 using namespace std;
 
+#include "jthread.hpp"
+
 template<typename T, bool col_major=false>
 class MatrixView{
 public:
@@ -54,7 +56,7 @@ void get_matrix_to_matrix_dist(double *a, double *b, double *res, long a_rows, l
 
 void get_matrix_to_matrix_dist_multi_threading(double *a, double *b, double *res, long a_rows, long b_rows, long vec_dim){
     const int threads = omp_get_max_threads()-1;
-    thread* thread_pool = new thread[threads+1];
+    jthread* thread_pool = new jthread[threads+1];
     long start_ptr, size, local_rows;
     start_ptr = 0l;
     for(int i = 0; i<=threads; i++){
@@ -65,7 +67,13 @@ void get_matrix_to_matrix_dist_multi_threading(double *a, double *b, double *res
             local_rows = a_rows / threads;
         }
         size = local_rows * vec_dim;
-        thread_pool[i] = thread(get_matrix_to_matrix_dist, &a[start_idx_row * vec_dim],
+//        thread_pool[i] = thread(get_matrix_to_matrix_dist, &a[start_idx_row * vec_dim],
+//                                                         &b[0],
+//                                                         &res[start_idx_row * b_rows],
+//                                                         local_rows,
+//                                                         b_rows,
+//                                                         vec_dim);
+        thread_pool[i] = jthread(get_matrix_to_matrix_dist, &a[start_idx_row * vec_dim],
                                                          &b[0],
                                                          &res[start_idx_row * b_rows],
                                                          local_rows,
@@ -73,9 +81,9 @@ void get_matrix_to_matrix_dist_multi_threading(double *a, double *b, double *res
                                                          vec_dim);
         start_ptr += size;
     }
-    for(int j=0; j<=threads; j++){
-        thread_pool[j].join();
-    }
+//    for(int j=0; j<=threads; j++){
+//        thread_pool[j].join();
+//    }
     // compile with -pthread
 }
 

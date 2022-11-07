@@ -1,9 +1,12 @@
 from distutils.core import setup, Extension
 from Cython.Build import cythonize
 import numpy as np
+import os
 
+os.environ["CC"] = "gcc-10"
+os.environ["CXX"] = "g++-10"
 
-compile_args = ['-std=c++11', '-fopenmp', "-O3", "-pthread"]
+compile_args = ['-std=c++17', '-fopenmp', "-O3", "-pthread"]
 linker_flags = ['-fopenmp', "-pthread"]
 
 module = Extension('pairwise_distance_euclidean',
