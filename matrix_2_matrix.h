@@ -35,7 +35,7 @@ public:
 };
 
 
-void get_matrix_to_matrix_dist(double *a, double *b, double *res, long a_rows, long b_rows, long vec_dim){
+inline void get_matrix_to_matrix_dist(double *a, double *b, double *res, const long a_rows, const long b_rows, const long vec_dim){
     const MatrixView<double, false> a_view(a, a_rows, vec_dim);
     const MatrixView<double, false> b_view(b, b_rows, vec_dim);
     int idx = 0;
@@ -54,7 +54,7 @@ void get_matrix_to_matrix_dist(double *a, double *b, double *res, long a_rows, l
     }
 }
 
-void get_matrix_to_matrix_dist_multi_threading(double *a, double *b, double *res, long a_rows, long b_rows, long vec_dim){
+inline void get_matrix_to_matrix_dist_multi_threading(double *a, double *b, double *res, const long a_rows, const long b_rows, const long vec_dim){
     const int threads = omp_get_max_threads()-1;
     jthread* thread_pool = new jthread[threads+1];
     long start_ptr, size, local_rows;
@@ -87,21 +87,22 @@ void get_matrix_to_matrix_dist_multi_threading(double *a, double *b, double *res
     // compile with -pthread
 }
 
-void get_pairwise_dist(double *a, long a_rows, long vec_dim, double *res){
+inline void get_pairwise_dist(double *a, const long a_rows, const long vec_dim, double *res){
     const MatrixView<double, false> a_view(a, a_rows, vec_dim);
     auto i = 0;
     double diff = 0.0;
+    double cur_sum;
+    int index = 0;
     // #pragma omp parallel for num_threads(4) // data race, use critical(atomic op)
     for(; i < a_rows; i++){
         for(auto j = 0; j < i; j++){
-            double cur_sum = 0.0;
-            #pragma omp parallel for num_threads(4) reduction(+:cur_sum) private(diff)
+            cur_sum = 0.0;
+            #pragma omp parallel for simd num_threads(2) reduction(+:cur_sum) private(diff)
             for(auto k = 0; k < vec_dim; k++){
                 diff = (a_view(i, k) - a_view(j, k));
                 cur_sum = cur_sum + diff * diff;
             }
-            res[a_rows * i + j] = sqrt(cur_sum);
-            res[a_rows * j + i] = sqrt(cur_sum);
+            *(res + index++) = *(res + (a_rows * j + i)) = sqrt(cur_sum);
         }
     }
 }
