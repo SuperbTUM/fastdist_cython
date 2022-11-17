@@ -41,11 +41,11 @@ inline void get_matrix_to_matrix_dist(double *a, double *b, double *res, const l
     int idx = 0;
     double diff = 0.0;
     // #pragma omp parallel for num_threads(4) // data race, use critical(atomic op)
-    for(auto i = 0; i < a_rows; i++){
-        for(auto j = 0; j < b_rows; j++){
+    for(auto i = 0; i != a_rows; i++){
+        for(auto j = 0; j != b_rows; j++){
             double cur_sum = 0.0;
             #pragma omp parallel for num_threads(4) reduction(+:cur_sum) private(diff)
-            for(auto k = 0; k < vec_dim; k++){
+            for(auto k = 0; k != vec_dim; k++){
                 diff = a_view(i, k) - b_view(j, k);
                 cur_sum = cur_sum + diff * diff;
             }
@@ -94,8 +94,8 @@ inline void get_pairwise_dist(double *a, const long a_rows, const long vec_dim, 
     double cur_sum;
     int index = 0;
     // #pragma omp parallel for num_threads(4) // data race, use critical(atomic op)
-    for(; i < a_rows; i++){
-        for(auto j = 0; j < i; j++){
+    for(; i != a_rows; i++){
+        for(auto j = 0; j != i; j++){
             cur_sum = 0.0;
             #pragma omp parallel for simd num_threads(2) reduction(+:cur_sum) private(diff)
             for(auto k = 0; k < vec_dim; k++){
