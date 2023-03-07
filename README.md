@@ -14,6 +14,8 @@ Windows/Linux
 
 ## Quick Start
 
+*Update: this demo has been upload on [Pypi](https://pypi.org/project/pairwise-distance-euclidean/) and can be installed via pip.*
+
 To use new features, you need to install `gcc-10` and `g++-10`. Please following these commands for installation.
 
 ```bash
